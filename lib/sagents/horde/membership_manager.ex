@@ -19,8 +19,9 @@ defmodule Sagents.Horde.MembershipManager do
   are never pruned.
 
   Membership here is instead derived from **participation**: every node that
-  starts `Sagents.Supervisor` joins an OTP `:pg` group, and this process sets
-  Horde's members to exactly the nodes in that group. Because a node runs
+  starts `Sagents.Supervisor` joins an OTP `:pg` group, and this process adds
+  each node to Horde's members as it joins that group and removes it once it
+  leaves. Because a node runs
   `Sagents.Supervisor` only where the host application chose to (e.g. gated to a
   `:web` role), "nodes running Sagents" *is* "agent-hosting nodes" — no
   node-name predicate required. `:pg` removes a node's entry automatically on
@@ -40,7 +41,7 @@ defmodule Sagents.Horde.MembershipManager do
   adds the nodes a `:pg` view shows or removes the nodes `:pg` reported as
   gone. A view is never handed to Horde as the whole member set. `:pg`
   discovers the other nodes' scopes asynchronously, so for a moment after this
-  process joins, the group it reads is a partial view of the cluster — while
+  process joins, the group it reads is a partial view of the cluster, while
   Horde, which also learns members through CRDT replication from its peers,
   may already hold the rest. Horde treats a member missing from `set_members/2`
   as removed and drops that member's registrations cluster-wide, so applying a
